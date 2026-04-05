@@ -22,7 +22,7 @@ struct BlockBody {
     transactions_counter: u64,
     transactions: TreeNode,
 }
-
+#[derive(Clone)]
 struct TreeNode {
     hash_node: Option<[u8; 32]>,
     left_node: Option<Box<TreeNode>>,
@@ -35,7 +35,7 @@ fn to_hash(unhashed: &str) -> [u8; 32] {
 
 impl TreeNode {
     fn new_leaves(transactions: &mut Vec<String>) -> TreeNode {
-        let transactions_len: usize = transactions.len() as usize;
+        let transactions_len: usize = transactions.clone().len() as usize;
         if transactions_len % 2 != 0 {
             let last = transactions[transactions_len - 1].clone();
             transactions.push(last);
@@ -44,9 +44,8 @@ impl TreeNode {
         let transactions_hashed: Vec<[u8; 32]> =
             transactions.iter().map(|tx| to_hash(tx.as_str())).collect();
 
-        let mut nodes: Vec<TreeNode>;
-
         let leaves: Vec<TreeNode> = transactions_hashed
+            .clone()
             .into_iter()
             .map(|hash| TreeNode {
                 hash_node: Some(hash),
@@ -54,7 +53,9 @@ impl TreeNode {
                 right_node: None,
             })
             .collect();
-        let mut nodes: Vec<TreeNode>;
+
+        let mut nodes: Vec<TreeNode> = vec![];
+
         for tx in (0..transactions_hashed.len()).step_by(2) {
             let mut hasher = Sha256::new();
             hasher.update(transactions_hashed[tx]);
@@ -72,11 +73,48 @@ impl TreeNode {
             nodes.push(new_node);
         }
 
-        let mut root: TreeNode = TreeNode {
-            hash_node: None,
-            left_node: None,
-            right_node: None,
-        };
+        // let mut root: TreeNode = TreeNode {
+        //     hash_node: None,
+        //     left_node: None,
+        //     right_node: None,
+        // };
+        loop {
+            if nodes.len() <= 1 {
+                break;
+            }
+
+            if nodes.len() % 2 != 0 {
+                let nodes_last: TreeNode = nodes[nodes.len() - 1].clone();
+
+                nodes.push(nodes_last);
+            }
+
+            let mut next_level: Vec<TreeNode> = Vec::new();
+
+            for i in (0..nodes.len()).step_by(2) {
+                let mut left_node = nodes[i].clone();
+                let mut right_node = nodes[i + 1].clone();
+
+                let mut left_hash = left_node.hash_node.clone();
+                let mut right_hash = right_node.hash_node.clone();
+
+                let mut hasher = Sha256::new();
+                hasher.update(left_hash.unwrap());
+                hasher.update(right_hash.unwrap());
+
+                let parent_hash: [u8; 32] = hasher.finalize().into();
+
+                let parent_node = TreeNode {
+                    hash_node: Some(parent_hash),
+                    left_node: Some(Box::new(left_node)),
+                    right_node: Some(Box::new(right_node)),
+                };
+
+                next_level.push(parent_node);
+            }
+            nodes = next_level;
+        }
+        nodes.pop().unwrap()
     }
 }
 
