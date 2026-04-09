@@ -1,162 +1,20 @@
-use core::num;
-use nalgebra::RealField;
-use num_traits::Float;
-use sha2::{Digest, Sha256};
-use std::time::{SystemTime, UNIX_EPOCH};
+use crate::transaction::Transaction;
 
-struct Block {
-    header: BlockHead,
-    body: BlockBody,
+pub struct Block {
+    pub header: BlockHead,
+    pub body:   BlockBody,
 }
 
-struct BlockHead {
-    index: u32,
-    merkle_root_hash: [u8; 32],
-    hash: [u8; 32],
-    hash_prev: [u8; 32],
-    difficulty: u8,
-    timestamp: u64,
-    nonce: u64,
+pub struct BlockHead {
+    pub index:            u32,
+    pub merkle_root_hash: [u8; 32],
+    pub hash:             [u8; 32],
+    pub hash_prev:        [u8; 32],
+    pub difficulty:       u8,
+    pub timestamp:        u64,
+    pub nonce:            u64,
 }
 
-struct BlockBody {
-    transactions_counter: u64,
-    transactions: Vec<Transactions>,
-}
-
-#[derive(Clone)]
-struct TreeNode {
-    hash_node: [u8; 32],
-    left_node: Option<Box<TreeNode>>,
-    right_node: Option<Box<TreeNode>>,
-}
-
-fn to_hash(unhashed: &str) -> [u8; 32] {
-    Sha256::digest(unhashed.as_bytes()).into()
-}
-
-fn double_hash(data: &[u8]) -> [u8; 32] {
-    Sha256::digest(Sha256::digest(data)).into()
-}
-
-impl TreeNode {
-    fn new_leaves(transactions: &mut Vec<String>) -> TreeNode {
-        let transactions_len: usize = transactions.clone().len() as usize;
-        if transactions_len % 2 != 0 {
-            let last = transactions[transactions_len - 1].clone();
-            transactions.push(last);
-        }
-
-        let transactions_hashed: Vec<[u8; 32]> = transactions
-            .iter()
-            .map(|tx| double_hash(tx.as_bytes()))
-            .collect();
-
-        let leaves: Vec<TreeNode> = transactions_hashed
-            .clone()
-            .into_iter()
-            .map(|hash| TreeNode {
-                hash_node: hash,
-                left_node: None,
-                right_node: None,
-            })
-            .collect();
-
-        let mut nodes: Vec<TreeNode> = vec![];
-
-        for tx in (0..transactions_hashed.len()).step_by(2) {
-            let combined = [transactions_hashed[tx], transactions_hashed[tx + 1]].concat();
-            let new_node_hash: [u8; 32] = double_hash(&combined);
-
-            // Create new node
-            let mut new_node = TreeNode {
-                hash_node: new_node_hash,
-                left_node: None,
-                right_node: None,
-            };
-
-            nodes.push(new_node);
-        }
-
-        loop {
-            if nodes.len() <= 1 {
-                break;
-            }
-
-            if nodes.len() % 2 != 0 {
-                let nodes_last: TreeNode = nodes[nodes.len() - 1].clone();
-
-                nodes.push(nodes_last);
-            }
-
-            let mut next_level: Vec<TreeNode> = Vec::new();
-
-            for i in (0..nodes.len()).step_by(2) {
-                let mut left_node = nodes[i].clone();
-                let mut right_node = nodes[i + 1].clone();
-
-                let left_hash = left_node.hash_node;
-                let right_hash = right_node.hash_node;
-
-                let combined = [left_hash, right_hash].concat();
-                let parent_hash: [u8; 32] = double_hash(&combined);
-
-                let parent_node = TreeNode {
-                    hash_node: parent_hash,
-                    left_node: Some(Box::new(left_node)),
-                    right_node: Some(Box::new(right_node)),
-                };
-
-                next_level.push(parent_node);
-            }
-            nodes = next_level;
-        }
-        nodes.pop().unwrap()
-    }
-}
-
-struct BlockChain {
-    block_chain: Vec<Block>,
-}
-
-struct TxOutput {
-    value: u128,
-    script_pubkey: Vec<u8>,
-}
-
-struct TxInput {
-    prev_txid: [u8; 32],
-    prev_vout: u64,
-    script_signature: Vec<u8>,
-    sequence: u32,
-}
-
-struct Transactions {
-    inputs: Vec<TxInput>,
-    outputs: Vec<TxOutput>,
-    version: u8,
-    locktime: u32,
-}
-
-impl Transactions {
-    fn calculate_txid(tx: &Transactions) -> [u8; 32] {
-        let mut bytes = Vec::new();
-
-        for i in &tx.inputs {
-            bytes.extend_from_slice(&i.prev_txid);
-            bytes.extend_from_slice(&i.prev_vout.to_le_bytes());
-            bytes.extend_from_slice(&i.script_signature);
-            bytes.extend_from_slice(&i.sequence.to_le_bytes());
-        }
-
-        for i in &tx.outputs {
-            bytes.extend_from_slice(&i.value.to_le_bytes());
-            bytes.extend_from_slice(&i.script_pubkey);
-        }
-
-        bytes.extend_from_slice(&tx.version.to_le_bytes());
-        bytes.extend_from_slice(&tx.locktime.to_le_bytes());
-
-        double_hash(&bytes)
-    }
+pub struct BlockBody {
+    pub transactions: Vec<Transaction>,
 }
