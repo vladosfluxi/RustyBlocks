@@ -1,3 +1,5 @@
+use core::time;
+
 use crate::crypto::double_hash;
 use crate::transaction::Transaction;
 
@@ -32,5 +34,17 @@ impl BlockHead {
         unhashed.extend_from_slice(&self.nonce.to_le_bytes());
 
         double_hash(&unhashed)
+    }
+
+    pub fn mining(&mut self, genesis_target: [u8; 32]) -> bool {
+        let mut suggestion = self.serialize();
+
+        loop {
+            if double_hash(&suggestion) <= genesis_target {
+                self.hash = suggestion;
+                return true;
+            }
+            self.nonce += 1;
+        }
     }
 }
