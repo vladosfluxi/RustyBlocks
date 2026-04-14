@@ -1,0 +1,247 @@
+BLOCKCHAIN KNOWLEDGE TEST
+=========================
+Answer each question in your own words. No peeking at the files.
+Write your answers below each question.
+
+
+SECTION 1 — BASICS
+-------------------
+
+1. What is a blockchain? What makes it different from a normal database?
+   Answer:
+
+
+2. What is a node? Can anyone run one?
+   Answer:
+
+
+3. What does "decentralized" actually mean in practice?
+   Answer:
+
+
+4. What is the genesis block and why is it special?
+   Answer:
+
+
+SECTION 2 — TRANSACTIONS
+--------------------------
+
+5. Does Bitcoin store balances? If not, what does it store instead?
+   Answer:
+
+
+6. What is a UTXO? Give a real-world analogy.
+   Answer:
+
+
+7. A transaction has inputs and outputs. What does each one do?
+   Answer:
+
+
+8. What is prev_txid and prev_vout? Why do you need both?
+   Answer:
+
+
+9. You have one UTXO worth 1 BTC and you want to send 0.3 BTC to Alice.
+   Draw or describe exactly what the transaction looks like.
+   How many inputs? How many outputs? What are the values?
+   Answer:
+
+
+10. Where does the miner fee come from? Is it an explicit output in the transaction?
+    Answer:
+
+
+11. When Bob sends Alice 0.5 BTC, does Alice's address get "updated" in an existing
+    UTXO? What actually happens?
+    Answer:
+
+
+12. What happens to the UTXO set after a transaction is confirmed?
+    Answer:
+
+
+SECTION 3 — SCRIPTS
+---------------------
+
+13. What is scriptPubKey? Who writes it and when?
+    Answer:
+
+
+14. What is scriptSig? Who writes it and when?
+    Answer:
+
+
+15. Does scriptSig contain the private key? What does it contain?
+    Answer:
+
+
+16. Explain in one sentence what a Bitcoin address actually is at the backend level.
+    Answer:
+
+
+SECTION 4 — KEYS AND SIGNATURES
+----------------------------------
+
+17. How is a private key generated? What is it made of?
+    Answer:
+
+
+18. How do you get a public key from a private key?
+    Answer:
+
+
+19. What is G (the generator point)? Why does everyone use the same one?
+    Answer:
+
+
+20. A signature is a pair of numbers. What are they called and what does each represent?
+    Answer:
+
+
+21. What is tx_hash and why do you sign it instead of the raw transaction bytes?
+    Answer:
+
+
+22. Can anyone extract your private key from your signature? Why or why not?
+    Answer:
+
+
+23. Where does each of these live — wallet, transaction input, transaction output, or block?
+    a) private key        →
+    b) public key         →
+    c) address            →
+    d) signature (sig_r, sig_s) →
+    e) G (generator)      →
+
+
+SECTION 5 — MINING
+--------------------
+
+24. What is Proof of Work in one sentence?
+    Answer:
+
+
+25. What is the nonce? What do miners do with it?
+    Answer:
+
+
+26. What does "the hash must be below the target" mean in plain English?
+    Answer:
+
+
+27. Where does the target value come from? Is it broadcast over the network?
+    Answer:
+
+
+28. What is difficulty and how does it relate to the target?
+    Answer:
+
+
+29. How often does Bitcoin adjust the difficulty and why?
+    Answer:
+
+
+30. When a miner wins, what exactly do they broadcast? Do they broadcast their guesses?
+    Answer:
+
+
+31. What is an orphan block?
+    Answer:
+
+
+SECTION 6 — MEMPOOL
+---------------------
+
+32. What is the mempool? Is there one global mempool?
+    Answer:
+
+
+33. A transaction has been broadcast. Is it confirmed yet? Where is it?
+    Answer:
+
+
+34. How does a miner decide which transactions to include in a block?
+    Answer:
+
+
+35. What happens to a transaction if its fee is too low?
+    Answer:
+
+
+36. What is RBF? What is CPFP?
+    Answer:
+
+
+SECTION 7 — WALLET
+--------------------
+
+37. Does your wallet store coins? What does it actually store?
+    Answer:
+
+
+38. What is a seed phrase? What happens if someone steals it?
+    Answer:
+
+
+39. You lose your phone. You have your seed phrase. Are your coins gone?
+    Answer:
+
+
+40. What is the difference between a custodial and non-custodial wallet?
+    Answer:
+
+
+41. When you hit "Receive" in your wallet app, what happens on the blockchain at that moment?
+    Answer:
+
+
+42. When you hit "Send", list every step that happens from your finger on the screen
+    to the recipient seeing a confirmed transaction.
+    Answer:
+
+
+SECTION 8 — NODES
+-------------------
+
+43. What are the 5 types of nodes? What makes each one different?
+    Answer:
+
+
+44. How does a brand new node find other nodes to connect to?
+    Answer:
+
+
+45. Two nodes in different countries both run full nodes. Will their confirmed chains
+    be identical? Will their mempools be identical? Explain why.
+    Answer:
+
+
+46. A malicious node sends you a fake block with invalid transactions.
+    What happens?
+    Answer:
+
+
+BONUS QUESTIONS (hard)
+-----------------------
+
+47. If you have 3 UTXOs worth 0.1, 0.4, and 0.2 BTC and you want to send 0.5 BTC,
+    what does your wallet have to do? How many inputs will the transaction have?
+    Answer:
+
+
+48. Why can't you just change one byte in a confirmed block without anyone noticing?
+    Answer:
+
+
+49. What is the coinbase transaction? How is it different from a normal transaction?
+    Answer:
+
+
+50. Bitcoin's supply is capped at 21 million BTC. What mechanism enforces this cap?
+    Answer:
+
+
+=========================
+END OF TEST
+=========================
