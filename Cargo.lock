@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "nalgebra",
+ "num-bigint",
  "num-traits",
  "sha2",
 ]

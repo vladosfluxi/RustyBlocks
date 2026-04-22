@@ -1,8 +1,9 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use crate::block::{Block, BlockBody, BlockHead};
 use crate::merkle::TreeNode;
 use crate::transaction::{Transaction, TxOutput};
+use chrono::offset;
+use num_bigint::BigUint;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 // Maximum target — easiest possible mining condition
 const GENESIS_TARGET: [u8; 32] = [
@@ -58,4 +59,22 @@ impl BlockChain {
             blocks: vec![genesis],
         }
     }
+
+    pub fn add_block(Chain: &mut Self, trx: &Transaction, diff: u64) {
+        let target = calculate_target(diff);
+    }
+}
+
+pub fn calculate_target(diff: u64) -> [u8; 32] {
+    let gen_target = BigUint::from_bytes_be(&GENESIS_TARGET);
+    let result = gen_target / diff;
+
+    let bytes = result.to_bytes_be();
+
+    let mut target = [0u8; 32];
+
+    let mut offset = 32 - bytes.len();
+    target[offset..].copy_from_slice(&bytes);
+
+    target
 }

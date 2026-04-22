@@ -1,7 +1,6 @@
-use core::time;
-
 use crate::crypto::double_hash;
 use crate::transaction::Transaction;
+use core::time;
 
 pub struct Block {
     pub header: BlockHead,
@@ -36,13 +35,12 @@ impl BlockHead {
         double_hash(&unhashed)
     }
 
-    pub fn mining(&mut self, genesis_target: [u8; 32]) -> bool {
-        let mut suggestion = self.serialize();
-
+    pub fn mining(&mut self, genesis_target: [u8; 32]) {
         loop {
-            if double_hash(&suggestion) <= genesis_target {
-                self.hash = suggestion;
-                return true;
+            let hash = self.serialize();
+            if hash <= genesis_target {
+                self.hash = hash;
+                return;
             }
             self.nonce += 1;
         }
