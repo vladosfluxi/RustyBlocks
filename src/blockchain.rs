@@ -1,7 +1,8 @@
 use crate::block::{Block, BlockBody, BlockHead};
 use crate::merkle::TreeNode;
-use crate::transaction::{Transaction, TxOutput};
+use crate::transaction::{Transaction, TxInput, TxOutput};
 use chrono::offset;
+use core::{hash, time};
 use num_bigint::BigUint;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -40,7 +41,7 @@ impl BlockChain {
             index: 0,
             merkle_root_hash: merkle_root,
             hash: [0u8; 32],
-            hash_prev: [0u8; 32], // no previous block
+            hash_prev: [0u8; 32],
             difficulty: 1,
             timestamp,
             nonce: 0,
@@ -60,11 +61,65 @@ impl BlockChain {
         }
     }
 
-    pub fn add_block(Chain: &mut Self, trx: &Transaction, diff: u64) {
+    pub fn add_block_mining(Chain: &mut Self, trx: &Vec<Transaction>, diff: u64) {
         let target = calculate_target(diff);
+
+        let index: u64 = (Chain.blocks.last().unwrap().header.index + 1) as u64;
+
+        // Create a coinbase transaction, prepend it to the transactions vec
+        let txids: Vec<[u8; 32]> = trx.iter().map(|tx| tx.calculate_txid()).collect();
+        let coinbase = Transaction {
+            version: 1,
+            inputs: vec![],
+            // inputs: vec![TxInput {
+            //     prev_txid: txids[txids.len() - 1],
+            //     prev_vout: 1,
+            //     script_signature: vec![],
+            //     sequence: 0xFFFFFFF,
+            // }],
+            outputs: vec![TxOutput {
+                value: block_reward(index),
+                script_pubkey: vec![],
+            }],
+            locktime: 0,
+        };
+
+        let coinbase_txid = coinbase.calculate_txid();
+        let mut all_txids = vec![coinbase_txid];
+        all_txids.extend(txids);
+        let merkle_root = TreeNode::build(&mut all_txids).hash_node;
+        let hash_prev = Chain.blocks.last().unwrap().header.hash;
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        let mut blockhead = BlockHead {
+            index: index as u32,
+            merkle_root_hash: merkle_root,
+            hash_prev: hash_prev,
+            hash: [0u8; 32],
+            timestamp: timestamp,
+            difficulty: diff as u8,
+            nonce: 0,
+        };
+
+        blockhead.mining(target);
+
+        let blockbody = BlockBody {
+            transactions: std::iter::once(coinbase)
+                .chain(trx.iter().cloned())
+                .collect(),
+        };
+
+        let block = Block {
+            body: blockbody,
+            header: blockhead,
+        };
+
+        Chain.blocks.push(block);
     }
 }
-
 pub fn calculate_target(diff: u64) -> [u8; 32] {
     let gen_target = BigUint::from_bytes_be(&GENESIS_TARGET);
     let result = gen_target / diff;
@@ -77,4 +132,8 @@ pub fn calculate_target(diff: u64) -> [u8; 32] {
     target[offset..].copy_from_slice(&bytes);
 
     target
+}
+
+pub fn block_reward(index: u64) -> u64 {
+    5_000_000_000 >> (index / 210_000)
 }

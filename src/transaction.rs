@@ -1,5 +1,6 @@
 use crate::crypto::double_hash;
 
+#[derive(Clone)]
 pub struct TxInput {
     pub prev_txid: [u8; 32],
     pub prev_vout: u32,
@@ -7,11 +8,13 @@ pub struct TxInput {
     pub sequence: u32,
 }
 
+#[derive(Clone)]
 pub struct TxOutput {
     pub value: u64,
     pub script_pubkey: Vec<u8>,
 }
 
+#[derive(Clone)]
 pub struct Transaction {
     pub version: u32,
     pub inputs: Vec<TxInput>,
