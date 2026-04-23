@@ -113,7 +113,36 @@ impl BlockChain {
     }
 
     pub fn validate_chain(&self) -> bool {}
-    pub fn validate_hash_ser(&self) -> bool {}
+
+    pub fn validate_target(&self) -> bool {
+        for block in &self.blocks {
+            let current_block_hash = block.header.hash;
+            let current_block_target = calculate_target(block.header.index as u64);
+
+            if (current_block_target < current_block_hash) {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn validate_hash_ser(&self) -> bool {
+        for block in &self.blocks {
+            let block_hash = &block.header.hash;
+            let serealized_hash = &block.header.serialize();
+
+            if block_hash != serealized_hash {
+                println!(
+                    "The block with index: {} has not its real hash",
+                    &block.header.index
+                );
+                return false;
+            }
+        }
+
+        true
+    }
+
     pub fn validate_hashes(&self) -> bool {
         for i in self.blocks.windows(2) {
             let current = &i[0];
