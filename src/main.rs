@@ -1,3 +1,4 @@
+use crate::blockchain::BlockChain;
 mod block;
 mod blockchain;
 mod crypto;
@@ -5,36 +6,59 @@ mod merkle;
 mod transaction;
 
 fn main() {
-    test_genesis_block();
+    test_chain_growth();
 }
 
 // ─── TEMPORARY TEST — remove this function when done ─────────────────────────
 
-fn test_genesis_block() {
-    use blockchain::BlockChain;
+fn test_chain_growth() {
+    println!("Building chain with 3 blocks...\n");
 
-    println!("Mining genesis block...");
+    let mut chain = BlockChain::new();
+    BlockChain::add_block(&mut chain, &vec![], 1);
+    BlockChain::add_block(&mut chain, &vec![], 1);
 
-    let chain = BlockChain::new();
-    let genesis = &chain.blocks[0];
+    for (i, block) in chain.blocks.iter().enumerate() {
+        println!("--- Block {} ---", i);
+        println!("  index:     {}", block.header.index);
+        println!("  nonce:     {}", block.header.nonce);
+        println!("  difficulty:{}", block.header.difficulty);
+        println!("  hash:      {}", hex(&block.header.hash));
+        println!("  hash_prev: {}", hex(&block.header.hash_prev));
+        println!("  merkle:    {}", hex(&block.header.merkle_root_hash));
+        println!("  txs:       {}", block.body.transactions.len());
+        println!();
+    }
 
-    println!("Genesis block mined!");
-    println!("  index:     {}", genesis.header.index);
-    println!("  nonce:     {}", genesis.header.nonce);
-    println!("  timestamp: {}", genesis.header.timestamp);
-    println!("  hash:      {}", hex(&genesis.header.hash));
-    println!("  hash_prev: {}", hex(&genesis.header.hash_prev));
-    println!("  merkle:    {}", hex(&genesis.header.merkle_root_hash));
-    println!("  txs:       {}", genesis.body.transactions.len());
+    // ─── Checks ───
+    assert_eq!(chain.blocks.len(), 3, "Chain should have 3 blocks");
 
-    // Verify the hash is actually below the target
-    let target: [u8; 32] = [
-        0x00, 0x00, 0x0F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        0xFF, 0xFF,
-    ];
-    assert!(genesis.header.hash <= target, "Hash does not meet target!");
-    println!("  target check: PASSED");
+    for i in 1..chain.blocks.len() {
+        assert_eq!(
+            chain.blocks[i].header.hash_prev,
+            chain.blocks[i - 1].header.hash,
+            "Block {} hash_prev does not match block {} hash",
+            i,
+            i - 1
+        );
+        assert_eq!(
+            chain.blocks[i].header.index,
+            chain.blocks[i - 1].header.index + 1,
+            "Block {} index is not sequential",
+            i
+        );
+    }
+
+    // Each block must have at least 1 tx (the coinbase)
+    for (i, block) in chain.blocks.iter().enumerate() {
+        assert!(
+            !block.body.transactions.is_empty(),
+            "Block {} has no transactions",
+            i
+        );
+    }
+
+    println!("ALL CHECKS PASSED — chain is linked, indexed, and has coinbases");
 }
 
 fn hex(bytes: &[u8; 32]) -> String {

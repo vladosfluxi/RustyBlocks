@@ -1,6 +1,5 @@
 use crate::crypto::double_hash;
 use crate::transaction::Transaction;
-use core::time;
 
 pub struct Block {
     pub header: BlockHead,

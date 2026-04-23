@@ -1,9 +1,8 @@
 use crate::block::{Block, BlockBody, BlockHead};
 use crate::merkle::TreeNode;
-use crate::transaction::{Transaction, TxInput, TxOutput};
-use chrono::offset;
-use core::{hash, time};
+use crate::transaction::{Transaction, TxOutput};
 use num_bigint::BigUint;
+use std::iter::chain;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 // Maximum target — easiest possible mining condition
@@ -61,22 +60,15 @@ impl BlockChain {
         }
     }
 
-    pub fn add_block_mining(Chain: &mut Self, trx: &Vec<Transaction>, diff: u64) {
+    pub fn add_block(Chain: &mut Self, trx: &Vec<Transaction>, diff: u64) {
         let target = calculate_target(diff);
 
         let index: u64 = (Chain.blocks.last().unwrap().header.index + 1) as u64;
 
-        // Create a coinbase transaction, prepend it to the transactions vec
         let txids: Vec<[u8; 32]> = trx.iter().map(|tx| tx.calculate_txid()).collect();
         let coinbase = Transaction {
             version: 1,
             inputs: vec![],
-            // inputs: vec![TxInput {
-            //     prev_txid: txids[txids.len() - 1],
-            //     prev_vout: 1,
-            //     script_signature: vec![],
-            //     sequence: 0xFFFFFFF,
-            // }],
             outputs: vec![TxOutput {
                 value: block_reward(index),
                 script_pubkey: vec![],
@@ -119,6 +111,23 @@ impl BlockChain {
 
         Chain.blocks.push(block);
     }
+
+    pub fn validate_chain(&self) -> bool {}
+    pub fn validate_hash_ser(&self) -> bool {}
+    pub fn validate_hashes(&self) -> bool {
+        for i in self.blocks.windows(2) {
+            let current = &i[0];
+            let next = &i[1];
+
+            let currect_hash = current.header.hash;
+            let next_hash = next.header.hash_prev;
+
+            if currect_hash != next_hash {
+                return false;
+            }
+        }
+        true
+    }
 }
 pub fn calculate_target(diff: u64) -> [u8; 32] {
     let gen_target = BigUint::from_bytes_be(&GENESIS_TARGET);
@@ -128,7 +137,7 @@ pub fn calculate_target(diff: u64) -> [u8; 32] {
 
     let mut target = [0u8; 32];
 
-    let mut offset = 32 - bytes.len();
+    let offset = 32 - bytes.len();
     target[offset..].copy_from_slice(&bytes);
 
     target
