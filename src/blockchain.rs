@@ -114,6 +114,24 @@ impl BlockChain {
 
     pub fn validate_chain(&self) -> bool {}
 
+    pub fn validate_merkle_root(&self) -> bool {
+        for block in &self.blocks {
+            let mut trx_hashes: Vec<[u8; 32]> = block
+                .body
+                .transactions
+                .iter()
+                .map(|trx| trx.calculate_txid())
+                .collect();
+
+            let recomputed_root = TreeNode::build(&mut trx_hashes).hash_node;
+
+            if recomputed_root != block.header.merkle_root_hash {
+                return false;
+            }
+        }
+        true
+    }
+
     pub fn validate_target(&self) -> bool {
         for block in &self.blocks {
             let current_block_hash = block.header.hash;
