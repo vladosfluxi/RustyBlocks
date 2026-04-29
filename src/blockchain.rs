@@ -112,7 +112,17 @@ impl BlockChain {
         Chain.blocks.push(block);
     }
 
-    pub fn validate_chain(&self) -> bool {}
+    pub fn validate_chain(&self) -> bool {
+        println!("Target:{}", self.validate_target());
+        println!("Hashes:{}", self.validate_hashes());
+        println!("Serialization:{}", self.validate_hash_ser());
+        println!("Merkle:{}", self.validate_merkle_root());
+
+        self.validate_target()
+            && self.validate_merkle_root()
+            && self.validate_hashes()
+            && self.validate_hash_ser()
+    }
 
     pub fn validate_merkle_root(&self) -> bool {
         for block in &self.blocks {
@@ -135,7 +145,7 @@ impl BlockChain {
     pub fn validate_target(&self) -> bool {
         for block in &self.blocks {
             let current_block_hash = block.header.hash;
-            let current_block_target = calculate_target(block.header.index as u64);
+            let current_block_target = calculate_target(block.header.difficulty as u64);
 
             if (current_block_target < current_block_hash) {
                 return false;
@@ -192,4 +202,9 @@ pub fn calculate_target(diff: u64) -> [u8; 32] {
 
 pub fn block_reward(index: u64) -> u64 {
     5_000_000_000 >> (index / 210_000)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 }

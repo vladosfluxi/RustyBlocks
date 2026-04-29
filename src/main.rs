@@ -1,4 +1,5 @@
 use crate::blockchain::BlockChain;
+use crate::transaction::{Transaction, TxInput, TxOutput};
 mod block;
 mod blockchain;
 mod crypto;
@@ -6,61 +7,81 @@ mod merkle;
 mod transaction;
 
 fn main() {
-    test_chain_growth();
+    let mut block_chain = BlockChain::new();
+    BlockChain::add_block(&mut block_chain, &example_transactions(), 1);
+    println!("{}", block_chain.validate_chain());
+    block_chain.blocks[1].body.transactions[0].outputs[0].value = 999_999_999;
+    println!("after tamper: {}", block_chain.validate_chain());
 }
-
-// ─── TEMPORARY TEST — remove this function when done ─────────────────────────
-
-fn test_chain_growth() {
-    println!("Building chain with 3 blocks...\n");
-
-    let mut chain = BlockChain::new();
-    BlockChain::add_block(&mut chain, &vec![], 1);
-    BlockChain::add_block(&mut chain, &vec![], 1);
-
-    for (i, block) in chain.blocks.iter().enumerate() {
-        println!("--- Block {} ---", i);
-        println!("  index:     {}", block.header.index);
-        println!("  nonce:     {}", block.header.nonce);
-        println!("  difficulty:{}", block.header.difficulty);
-        println!("  hash:      {}", hex(&block.header.hash));
-        println!("  hash_prev: {}", hex(&block.header.hash_prev));
-        println!("  merkle:    {}", hex(&block.header.merkle_root_hash));
-        println!("  txs:       {}", block.body.transactions.len());
-        println!();
-    }
-
-    // ─── Checks ───
-    assert_eq!(chain.blocks.len(), 3, "Chain should have 3 blocks");
-
-    for i in 1..chain.blocks.len() {
-        assert_eq!(
-            chain.blocks[i].header.hash_prev,
-            chain.blocks[i - 1].header.hash,
-            "Block {} hash_prev does not match block {} hash",
-            i,
-            i - 1
-        );
-        assert_eq!(
-            chain.blocks[i].header.index,
-            chain.blocks[i - 1].header.index + 1,
-            "Block {} index is not sequential",
-            i
-        );
-    }
-
-    // Each block must have at least 1 tx (the coinbase)
-    for (i, block) in chain.blocks.iter().enumerate() {
-        assert!(
-            !block.body.transactions.is_empty(),
-            "Block {} has no transactions",
-            i
-        );
-    }
-
-    println!("ALL CHECKS PASSED — chain is linked, indexed, and has coinbases");
-}
-
-fn hex(bytes: &[u8; 32]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+fn example_transactions() -> Vec<Transaction> {
+    vec![
+        Transaction {
+            version: 1,
+            inputs: vec![TxInput {
+                prev_txid: [0xAA; 32],
+                prev_vout: 0,
+                script_signature: vec![],
+                sequence: 0xFFFFFFFF,
+            }],
+            outputs: vec![
+                TxOutput {
+                    value: 50_000_000,
+                    script_pubkey: vec![1, 2, 3],
+                }, // Bob
+                TxOutput {
+                    value: 50_000_000,
+                    script_pubkey: vec![4, 5, 6],
+                }, // Alice change
+            ],
+            locktime: 0,
+        },
+        // Transaction 2 — Combines 2 inputs into 1 output (consolidation)
+        Transaction {
+            version: 1,
+            inputs: vec![
+                TxInput {
+                    prev_txid: [0xBB; 32],
+                    prev_vout: 0,
+                    script_signature: vec![],
+                    sequence: 0xFFFFFFFF,
+                },
+                TxInput {
+                    prev_txid: [0xCC; 32],
+                    prev_vout: 1,
+                    script_signature: vec![],
+                    sequence: 0xFFFFFFFF,
+                },
+            ],
+            outputs: vec![TxOutput {
+                value: 200_000_000,
+                script_pubkey: vec![7, 8, 9],
+            }],
+            locktime: 0,
+        },
+        // Transaction 3 — One input split into 3 outputs (payment + 2 change-like)
+        Transaction {
+            version: 1,
+            inputs: vec![TxInput {
+                prev_txid: [0xDD; 32],
+                prev_vout: 2,
+                script_signature: vec![],
+                sequence: 0xFFFFFFFF,
+            }],
+            outputs: vec![
+                TxOutput {
+                    value: 30_000_000,
+                    script_pubkey: vec![10],
+                },
+                TxOutput {
+                    value: 20_000_000,
+                    script_pubkey: vec![11],
+                },
+                TxOutput {
+                    value: 10_000_000,
+                    script_pubkey: vec![12],
+                },
+            ],
+            locktime: 0,
+        },
+    ]
 }
