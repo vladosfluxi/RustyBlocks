@@ -12,5 +12,17 @@ impl Wallet {
         let mut rng = rand::rng();
         SecretKey::new(&mut rng)
     }
-    pub fn generate_pubkey() -> PublicKey {}
+    pub fn generate_pubkey(private_key: &SecretKey) -> PublicKey {
+        let secp = Secp256k1::new();
+        PublicKey::from_secret_key(&secp, &private_key)
+    }
+
+    pub fn new() -> Self {
+        let private_key = Wallet::generate_privkey();
+
+        Wallet {
+            private_key,
+            public_key: Wallet::generate_pubkey(&private_key),
+        }
+    }
 }
