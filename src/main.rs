@@ -5,6 +5,7 @@ mod blockchain;
 mod crypto;
 mod merkle;
 mod transaction;
+mod wallet;
 
 fn main() {
     let mut block_chain = BlockChain::new();

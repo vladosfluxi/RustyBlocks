@@ -1,4 +1,8 @@
 use crate::crypto::double_hash;
+use secp256k1::{
+    hashes::{sha256, Hash},
+    rand, Message, Secp256k1,
+};
 
 #[derive(Clone)]
 pub struct TxInput {

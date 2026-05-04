@@ -9,3 +9,7 @@ chrono = "0.4"
 num-traits = "0.2"
 nalgebra = "0.34.2"
 num-bigint = "0.4"
+secp256k1 = {version="0.31.1", features = ["rand", "hashes"]}
+ripemd = "0.2.0"
+# rand = {version = "0.10.1", features = ["sys_rng"]}
+rand = "0.8"
