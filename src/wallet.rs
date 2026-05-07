@@ -1,6 +1,6 @@
 use rand::rngs::OsRng;
 use ripemd::{Digest, Ripemd160};
-use secp256k1::rand;
+use secp256k1::{rand, Message};
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use sha2::Sha256;
 
@@ -32,5 +32,14 @@ impl Wallet {
         let sha = Sha256::digest(&pubkey_bytes);
         let address = Ripemd160::digest(&sha);
         address.into()
+    }
+
+    pub fn sign_tx(&self, tx_hash: [u8; 32]) -> Vec<u8> {
+        let message = secp256k1::Message::from_digest(tx_hash);
+        let secp = Secp256k1::new();
+        let bytes = &self.private_key.secret_bytes();
+
+        let signature = secp.sign_ecdsa(message, &self.private_key);
+        signature.serialize_der().to_vec()
     }
 }
